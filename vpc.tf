@@ -9,3 +9,11 @@ resource "aws_vpc" "main" {
     Name = "my-vpc"
   }
 }
+resource "aws_subnet" "subnet" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.0.0/20"
+
+  tags = {
+    Name = "my-subnet-1"
+  }
+}
