@@ -1,7 +1,9 @@
+
 provider "aws" {
   region ="ap-south-1"
 }
 
+# create a VPC.
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   
@@ -9,7 +11,7 @@ resource "aws_vpc" "main" {
     Name = "my-vpc"
   }
 }
-
+# create a public subnet.
 resource "aws_subnet" "subnet_1" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.0.0/20"
@@ -21,6 +23,7 @@ resource "aws_subnet" "subnet_1" {
   }
 }
 
+# create a private subnet.
 resource "aws_subnet" "subnet_2" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.16.0/20"
@@ -30,6 +33,7 @@ resource "aws_subnet" "subnet_2" {
   }
 }
 
+# create a Internet Gateway
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
@@ -38,6 +42,7 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
+# Create a Route table
 resource "aws_route_table" "route" {
     vpc_id = aws_vpc.main.id
     tags = {
@@ -45,18 +50,20 @@ resource "aws_route_table" "route" {
   }
   
 }
-
+# Route table is route
 resource "aws_route" "public_route" {
     route_table_id = aws_route_table.route.id
     destination_cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gw.id 
 }
 
+# Route table is association to subnet.
 resource "aws_route_table_association" "associate" {
   subnet_id      = aws_subnet.subnet_1.id
   route_table_id = aws_route_table.route.id
 }
 
+# create a security group.
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-security-group"
   description = "Allow SSH and HTTP"
@@ -89,7 +96,21 @@ resource "aws_security_group" "ec2_sg" {
     Name = "ec2-sg"
   }
 }
+resource "aws_eip" "lb" {
+  instance = aws_instance.jume.id
+  domain   = "vpc"
+}
+resource "aws_nat_gateway" "example" {
+  allocation_id = aws_eip.lb.id
+  subnet_id     = aws_subnet.subnet_1.id
 
+  tags = {
+    Name = "gw NAT"
+  }
+  depends_on = [aws_internet_gateway.example]
+}
+
+# Create a Jume server
 resource "aws_instance" "jume" {
     ami = "ami-051a31ab2f4d498f5"
     instance_type = "t3.micro"
@@ -101,6 +122,8 @@ resource "aws_instance" "jume" {
   }
   
 }
+
+# Create a application server.
 resource "aws_instance" "application_server" {
     ami = "ami-051a31ab2f4d498f5"
     instance_type = "t3.micro"
