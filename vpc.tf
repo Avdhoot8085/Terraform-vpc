@@ -106,7 +106,7 @@ resource "aws_instance" "jume" {
     ami = "ami-051a31ab2f4d498f5"
     instance_type = "t3.micro"
     subnet_id = aws_subnet.subnet_1.id
-    vpc_security_group_ids = aws_security_group.ec2_sg.subnet_id
+    vpc_security_group_ids = [aws_security_group.ec2_sg.subnet_id]
     key_name = aws_key_pair.generated_key.key_pair_id
     tags = {
     Name = "Jume_server"
