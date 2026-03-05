@@ -60,7 +60,7 @@ resource "aws_route_table_association" "associate" {
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-security-group"
   description = "Allow SSH and HTTP"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "SSH Access"
