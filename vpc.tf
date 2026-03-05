@@ -56,3 +56,60 @@ resource "aws_route_table_association" "associate" {
   subnet_id      = aws_subnet.subnet_1.id
   route_table_id = aws_route_table.route.id
 }
+
+resource "aws_security_group" "ec2_sg" {
+  name        = "ec2-security-group"
+  description = "Allow SSH and HTTP"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    description = "SSH Access"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP Access"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "ec2-sg"
+  }
+}
+
+resource "tls_private_key" "generated" {
+  algorithm = "RSA"
+}
+resource "aws_key_pair" "generated_key" {
+  key_name   = "terraform-generated-key"
+  public_key = tls_private_key.generated.public_key_openssh
+}
+resource "local_file" "save_private_key" {
+  content  = tls_private_key.generated.private_key_pem
+  filename = "terraform-generated-key.pem"
+}
+
+resource "aws_instance" "jume" {
+    ami = "ami-051a31ab2f4d498f5"
+    instance_type = "t3.micro"
+    subnet_id = aws_subnet.subnet_1.id
+    vpc_security_group_ids = aws_vpc.main.vpc_id
+    key_name = aws_key_pair.generated_key.key_pair_id
+    tags = {
+    Name = "Jume_server"
+  }
+  
+}
