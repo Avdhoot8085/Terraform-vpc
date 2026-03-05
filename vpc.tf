@@ -107,7 +107,7 @@ resource "aws_nat_gateway" "example" {
   tags = {
     Name = "gw NAT"
   }
-  depends_on = [aws_internet_gateway.example]
+  depends_on = [aws_internet_gateway.gw.id]
 }
 
 # Create a Jume server
