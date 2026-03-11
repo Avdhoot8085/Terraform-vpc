@@ -1,11 +1,11 @@
 
 provider "aws" {
-  region ="ap-south-1"
+  region = var.region_name
 }
 
 # create a VPC.
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr
   
   tags = {
     Name = "my-vpc"
@@ -14,8 +14,8 @@ resource "aws_vpc" "main" {
 # create a public subnet.
 resource "aws_subnet" "subnet_1" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.0.0/20"
-  availability_zone = "ap-south-1a"
+  cidr_block = var.public_cidr
+ availability_zone = var.availability
   map_public_ip_on_launch = true
 
   tags = {
@@ -26,7 +26,7 @@ resource "aws_subnet" "subnet_1" {
 # create a private subnet.
 resource "aws_subnet" "subnet_2" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.16.0/20"
+  cidr_block = var.private_cidr
 
   tags = {
     Name = "my-subnet-2"
@@ -85,6 +85,13 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Tomcat Access"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -112,24 +119,35 @@ resource "aws_nat_gateway" "example" {
 
 # Create a Jume server
 resource "aws_instance" "jume" {
-    ami = "ami-051a31ab2f4d498f5"
-    instance_type = "t3.micro"
+    ami = var.jume_server_ami
+    instance_type =var.jume_server_instance_type
     subnet_id = aws_subnet.subnet_1.id
     vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-    key_name = "Avdhoot-key"
+    key_name = var.jume_server_key
     tags = {
     Name = "Jume_server"
   }
-  
+  user_data = <<-EOF
+              #!/bin/bash
+              curl -o https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.115/bin/apache-tomcat-9.0.115.tar.gz
+              tar -xzvf apache-tomcat-9.0.115.tar.gz -C /opt
+              sudo -i
+              sudo cd /opt/apache-tomcat-9.0.115/bin
+              sudo yum install java -y
+              sudo ./catalina.sh start
+              sudo cd /opt/apache-tomcat-9.0.115/webapps
+              sudo curl -o https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war
+              sudo mv student.war /opt/apache-tomcat-9.0.115/webapps
+              EOF
 }
 
 # Create a application server.
 resource "aws_instance" "application_server" {
-    ami = "ami-051a31ab2f4d498f5"
-    instance_type = "t3.micro"
+    ami = var.application_server-ami
+    instance_type = var.application_server_instance_type
     subnet_id = aws_subnet.subnet_2.id
     vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-    key_name = "Avdhoot-key"
+    key_name = var.application_server_key
     tags = {
     Name = "Application_server"
   }
