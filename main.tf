@@ -131,13 +131,12 @@ resource "aws_instance" "jume" {
               #!/bin/bash
               curl -o https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.115/bin/apache-tomcat-9.0.115.tar.gz
               tar -xzvf apache-tomcat-9.0.115.tar.gz -C /opt
-              sudo -i
-              sudo cd /opt/apache-tomcat-9.0.115/bin
-              sudo yum install java -y
-              sudo ./catalina.sh start
-              sudo cd /opt/apache-tomcat-9.0.115/webapps
-              sudo curl -o https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war
-              sudo mv student.war /opt/apache-tomcat-9.0.115/webapps
+              cd /opt/apache-tomcat-9.0.115/bin
+              yum install java -y
+              ./catalina.sh start
+              cd /opt/apache-tomcat-9.0.115/webapps
+              curl -o https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war
+              mv student.war /opt/apache-tomcat-9.0.115/webapps
               EOF
 }
 
